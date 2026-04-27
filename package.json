@@ -1,0 +1,81 @@
+{
+	"name": "secret-rotation-kit",
+	"version": "0.1.0",
+	"description": "Zero-downtime multi-key rotation library for production services",
+	"type": "module",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			},
+			"require": {
+				"types": "./dist/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
+		}
+	},
+	"files": ["dist"],
+	"sideEffects": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"lint": "biome check .",
+		"lint:fix": "biome check . --write",
+		"format": "biome format . --write",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"typecheck": "tsc --noEmit",
+		"changeset": "changeset",
+		"version": "changeset version",
+		"release": "pnpm build && changeset publish",
+		"prepare": "husky"
+	},
+	"keywords": ["secrets", "rotation", "aws", "gcp", "vault", "security", "zero-downtime"],
+	"author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/reaatech/secret-rotation-kit.git"
+	},
+	"bugs": {
+		"url": "https://github.com/reaatech/secret-rotation-kit/issues"
+	},
+	"homepage": "https://github.com/reaatech/secret-rotation-kit#readme",
+	"engines": {
+		"node": ">=20.0.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@changesets/cli": "^2.29.2",
+		"@types/node": "^25.6.0",
+		"@vitest/coverage-v8": "^3.2.0",
+		"husky": "^9.1.7",
+		"tsup": "^8.4.0",
+		"typescript": "^5.8.3",
+		"vitest": "^3.2.0"
+	},
+	"peerDependencies": {
+		"@aws-sdk/client-secrets-manager": "^3.0.0",
+		"@google-cloud/secret-manager": "^5.0.0",
+		"node-vault": "^0.10.0"
+	},
+	"peerDependenciesMeta": {
+		"@aws-sdk/client-secrets-manager": {
+			"optional": true
+		},
+		"@google-cloud/secret-manager": {
+			"optional": true
+		},
+		"node-vault": {
+			"optional": true
+		}
+	}
+}
