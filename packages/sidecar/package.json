@@ -1,0 +1,48 @@
+{
+  "name": "@reaatech/secret-rotation-sidecar",
+  "version": "0.1.0",
+  "description": "HTTP sidecar server for Secret Rotation Kit",
+  "license": "MIT",
+  "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reaatech/secret-rotation-kit.git",
+    "directory": "packages/sidecar"
+  },
+  "homepage": "https://github.com/reaatech/secret-rotation-kit/tree/main/packages/sidecar#readme",
+  "bugs": {
+    "url": "https://github.com/reaatech/secret-rotation-kit/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@reaatech/secret-rotation-core": "workspace:*",
+    "@reaatech/secret-rotation-observability": "workspace:*",
+    "@reaatech/secret-rotation-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}
