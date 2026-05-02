@@ -1,222 +1,89 @@
-# DevOps Skills
+# DevOps Skill
 
-This skill set focuses on deployment and operations for the Secret Rotation Kit project.
+Guidance for deployment, CI/CD, and operations for secret-rotation-kit.
 
-## Capabilities
+## Repository
 
-### 1. CI/CD Pipeline
-- Set up automated build and test pipelines
-- Configure automated deployments
-- Implement canary releases and rollback strategies
-- Manage environment-specific configurations
+- **GitHub:** [reaatech/secret-rotation-kit](https://github.com/reaatech/secret-rotation-kit)
+- **Default branch:** `main`
+- **Package manager:** pnpm 10+
 
-### 2. Containerization
-- Create optimized Docker images
-- Implement multi-stage builds
-- Configure container security scanning
-- Manage container registries
+## CI/CD Pipeline
 
-### 3. Kubernetes Deployment
-- Create Helm charts for deployment
-- Configure Kubernetes resources (Deployments, Services, etc.)
-- Implement horizontal pod autoscaling
-- Set up pod disruption budgets for high availability
+The CI pipeline lives in `.github/workflows/ci.yml` and runs 10 jobs:
 
-### 4. Monitoring and Observability
-- Configure metrics collection (Prometheus)
-- Set up distributed tracing (OpenTelemetry)
-- Implement structured logging (JSON format)
-- Create dashboards and alerts (Grafana)
-
-### 5. Infrastructure as Code
-- Write Terraform configurations
-- Manage infrastructure state
-- Implement infrastructure testing
-- Use GitOps workflows (Flux/ArgoCD)
-
-## CI/CD Configuration
-
-### GitHub Actions Pipeline
-```yaml
-name: CI/CD Pipeline
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install
-      - run: pnpm run lint
-      - run: pnpm run test:coverage
-      - run: pnpm run build
-
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-      - uses: actions/setup-node@v4
-      - run: pnpm install
-      - run: pnpm audit
-      - uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-  deploy:
-    needs: [test, security]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-      - uses: actions/setup-node@v4
-      - run: pnpm install
-      - run: pnpm run build
-      - uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: ghcr.io/reaatech/secret-rotation-kit:latest
+```
+install (cache) → audit → format → lint → typecheck → build → test (matrix [20, 22]) → coverage → docker-build → docker-compose → all-checks
 ```
 
-## Docker Configuration
+Key features:
+- Dependency caching with `actions/cache@v4`
+- Test matrix across Node 20 and 22
+- Build artifact upload/download between jobs
+- Docker build and compose validation
+- Coverage summary in step summary
 
-### Multi-stage Dockerfile
+## Release Pipeline
+
+The release pipeline lives in `.github/workflows/release.yml`:
+
+1. On push to `main`, `changesets/action@v1` checks for pending changesets
+2. If changesets exist: opens/updates a "Version Packages" PR
+3. When merged: publishes to npm and mirrors to GitHub Packages
+4. Uses npm provenance (`NPM_CONFIG_PROVENANCE: 'true'`)
+
+## First Publish
+
+First publish from local laptop. Key steps:
+
+1. Generate `NPM_TOKEN` with "All packages and scopes" granular access
+2. Add token to GitHub repository secrets
+3. Manual first publish from local laptop:
+   ```bash
+   cd packages/<name>
+   pnpm publish --access public --no-git-checks --otp=<code>
+   ```
+4. Backfill to GitHub Packages via `gh auth refresh -s write:packages`
+5. Re-enable `push: branches: [main]` trigger in release workflow
+
+## Required GitHub Secrets
+
+| Secret | Purpose |
+|--------|---------|
+| `NPM_TOKEN` | npm publish (granular access token) |
+| `GITHUB_TOKEN` | Auto-provided by Actions |
+
+## Docker
+
+The project includes a multi-stage Dockerfile in `docker/`:
+
 ```dockerfile
-# Build stage
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
-COPY . .
-RUN pnpm run build
-
-# Production stage — only production dependencies
-FROM node:20-alpine
-WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile --prod
-COPY --from=builder /app/dist ./dist
-
-ENV NODE_ENV=production
-USER node
-
-EXPOSE 8080
-CMD ["node", "dist/sidecar/index.js"]
+FROM node:22-alpine AS base
+# deps stage: install all dependencies
+# builder stage: build all packages  
+# runner stage: production-only dependencies
 ```
 
-## Kubernetes Deployment
+Docker Compose in `docker/docker-compose.yml` includes:
+- `sidecar` — the rotation sidecar server
+- `prometheus` — metrics collection
+- `grafana` — metrics visualization
 
-### Helm Chart Values
-```yaml
-# values.yaml
-replicaCount: 3
+## Important Metrics
 
-image:
-  repository: ghcr.io/reaatech/secret-rotation-kit
-  tag: latest
-  pullPolicy: IfNotPresent
+| Metric | Type | Description |
+|--------|------|-------------|
+| `srk_rotate_requests_total` | Counter | Total rotation requests |
+| `srk_rotate_failures_total` | Counter | Failed rotation requests |
 
-service:
-  type: ClusterIP
-  port: 8080
+The sidecar exposes these at `GET /metrics` in Prometheus format.
 
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
+## Operations Checklist
 
-autoscaling:
-  enabled: true
-  minReplicas: 3
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 80
-
-env:
-  - name: PROVIDER_TYPE
-    value: "aws"
-  - name: AWS_REGION
-    value: "us-east-1"
-
-secrets:
-  - name: provider-credentials
-    keys:
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-```
-
-## Monitoring Configuration
-
-### Prometheus Metrics
-```typescript
-// Key metrics to expose
-- rotation_success_total{provider, secret_id}
-- rotation_duration_seconds{provider, secret_id}
-- rotation_failures_total{provider, secret_id, reason}
-- active_key_age_seconds{provider, secret_id}
-- consumer_coverage_percent{secret_id}
-- key_versions_active{secret_id}
-```
-
-### Grafana Dashboard Panels
-- Rotation success rate over time
-- Rotation latency percentiles (p50, p95, p99)
-- Active key age distribution
-- Consumer coverage heatmap
-- Error rate by provider and secret
-
-## Best Practices
-
-### Deployment
-1. **Blue-Green Deployment**: Zero-downtime deployments using two environments
-2. **Canary Releases**: Gradual rollout to detect issues early
-3. **Health Checks**: Proper liveness and readiness probes
-4. **Graceful Shutdown**: Handle SIGTERM for clean shutdown
-
-### Operations
-1. **Runbooks**: Document common operational procedures
-2. **Incident Response**: Clear escalation paths and procedures
-3. **Capacity Planning**: Monitor and plan for growth
-4. **Disaster Recovery**: Backup and restore procedures
-
-### Security
-1. **Image Scanning**: Scan containers for vulnerabilities
-2. **Network Policies**: Restrict network traffic between pods
-3. **Secret Management**: Use Kubernetes secrets or external vault
-4. **RBAC**: Implement role-based access control
-
-## Troubleshooting Guide
-
-### Common Issues
-
-**High Rotation Latency**
-- Check provider API rate limits
-- Verify network connectivity
-- Review consumer verification timeout settings
-
-**Rotation Failures**
-- Check provider credentials and permissions
-- Verify secret ID format and existence
-- Review error logs for specific failure reasons
-
-**Consumer Coverage Issues**
-- Verify consumer health check endpoints
-- Check network connectivity to consumers
-- Review consumer application logs
-
----
-
-**Related Skills**: [Security](../security/SKILL.md), [Testing](../testing/SKILL.md), [Architecture](../architecture/SKILL.md)
+- [ ] `pnpm build` produces `dist/` in each package
+- [ ] `pnpm test` passes
+- [ ] `pnpm typecheck` passes
+- [ ] `pnpm lint` passes
+- [ ] `NPM_TOKEN` secret is current (renews annually)
+- [ ] Release workflow trigger is correct for current phase (workflow_dispatch only before first publish)
+- [ ] All packages return 200 from `https://registry.npmjs.org/@reaatech%2fsecret-rotation-*`

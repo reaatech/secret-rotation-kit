@@ -1,292 +1,85 @@
-# Architecture Skills
+# Architecture Skill
 
-This skill set focuses on system design and architecture decisions for the Secret Rotation Kit project.
+Guidance for system design and architecture decisions in secret-rotation-kit.
 
-## Capabilities
+## Project Structure
 
-### 1. System Design
-- Design scalable and resilient architectures
-- Create component diagrams and data flow diagrams
-- Define service boundaries and interfaces
-- Plan for high availability and fault tolerance
+This is a **pnpm workspace monorepo** with 7 packages under `packages/`:
 
-### 2. Design Patterns
-- Apply proven design patterns (Factory, Strategy, Observer, etc.)
-- Implement dependency injection for testability
-- Use event-driven architecture for loose coupling
-- Apply circuit breaker pattern for resilience
-
-### 3. API Design
-- Design RESTful APIs with proper HTTP semantics
-- Create consistent error handling patterns
-- Implement proper versioning strategies
-- Design for backward compatibility
-
-### 4. Data Modeling
-- Design efficient data schemas
-- Plan for data migration and versioning
-- Implement proper indexing strategies
-- Consider data partitioning for scalability
-
-### 5. Performance Optimization
-- Identify and eliminate bottlenecks
-- Implement caching strategies
-- Optimize database queries
-- Plan for horizontal scaling
-
-## Architecture Principles
-
-### 1. Separation of Concerns
-- Clear layer boundaries (Application, Core, Provider, Infrastructure)
-- Single responsibility for each component
-- Minimize coupling between components
-- Maximize cohesion within components
-
-### 2. Fault Tolerance
-- Design for failure at every layer
-- Implement retry mechanisms with exponential backoff
-- Use circuit breakers to prevent cascade failures
-- Provide graceful degradation
-
-### 3. Observability
-- Comprehensive logging with correlation IDs
-- Metrics for all critical operations
-- Distributed tracing for request flows
-- Health checks for all services
-
-### 4. Security by Design
-- Zero trust architecture
-- Defense in depth
-- Principle of least privilege
-- Secure defaults
-
-## Component Architecture
-
-### Application Layer
 ```
-┌─────────────────────────────────────────────────────┐
-│                   Application Layer                  │
-│  ┌─────────────────┐  ┌─────────────────┐          │
-│  │ RotationManager │  │ ConsumerRegistry│  Sidecar │
-│  └─────────────────┘  └─────────────────┘  Server  │
-└─────────────────────────────────────────────────────┘
+packages/
+  types/              — Shared types, interfaces, and error classes (zero deps)
+  observability/      — LoggerService and MetricsService (depends on types)
+  core/               — Rotation engine, verification, resilience (depends on types, observability)
+  provider-aws/       — AWS Secrets Manager adapter (depends on types)
+  provider-gcp/       — GCP Secret Manager adapter (depends on types)
+  provider-vault/     — HashiCorp Vault adapter (depends on types)
+  sidecar/            — HTTP sidecar server (depends on types, core, observability)
 ```
 
-**Responsibilities:**
-- Orchestrate rotation workflows
-- Manage consumer registrations
-- Handle API requests
-- Coordinate between components
+## Design Principles
 
-### Core Services Layer
-```
-┌─────────────────────────────────────────────────────┐
-│                Core Services Layer                   │
-│  ┌──────────┐ ┌──────────────┐ ┌────────────────┐  │
-│  │KeyRotator│ │Propagation   │ │KeyWindow       │  │
-│  │          │ │Verifier      │ │Manager         │  │
-│  └──────────┘ └──────────────┘ └────────────────┘  │
-│  ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │
-│  │Rotation      │ │Rollback      │ │Event       │  │
-│  │Scheduler     │ │Manager       │ │Emitter     │  │
-│  └──────────────┘ └──────────────┘ └────────────┘  │
-└─────────────────────────────────────────────────────┘
-```
+1. **Interface-first design** — All contracts live in `packages/types`. Concrete implementations satisfy them.
+2. **Pass instances, not configs** — Providers are injected via `providerInstance`, not auto-created from config.
+3. **Explicit dependency graphs** — Package-level dependencies are clear. No circular dependencies.
+4. **Provider abstraction** — All providers implement `SecretProvider` from `types`. Core never imports provider packages directly.
+5. **Event-driven lifecycle** — Every rotation stage emits typed events. Event emitters support in-memory and persistent backends.
 
-**Responsibilities:**
-- Core rotation logic
-- Propagation verification
-- Key window management
-- Scheduling and coordination
-- Event emission
+## Package Dependency Graph
 
-### Provider Layer
 ```
-┌─────────────────────────────────────────────────────┐
-│                   Provider Layer                     │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐            │
-│  │ AWS      │ │ GCP      │ │ Vault    │  Provider  │
-│  │Provider  │ │Provider  │ │Provider  │  Factory   │
-│  └──────────┘ └──────────┘ └──────────┘            │
-└─────────────────────────────────────────────────────┘
+types (zero deps)
+  ↑
+  ├── observability (→ types)
+  ├── core (→ types, observability)
+  │     ↑
+  │     └── sidecar (→ types, core, observability)
+  ├── provider-aws (→ types)
+  ├── provider-gcp (→ types)
+  └── provider-vault (→ types)
 ```
 
-**Responsibilities:**
-- Abstract provider-specific details
-- Implement provider interfaces
-- Handle provider-specific errors
-- Manage provider authentication
+## Key Architecture Decisions
 
-### Infrastructure Layer
-```
-┌─────────────────────────────────────────────────────┐
-│                Infrastructure Layer                  │
-│  ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │
-│  │Logger        │ │Metrics       │ │Config      │  │
-│  │Service       │ │Service       │ │Service     │  │
-│  └──────────────┘ └──────────────┘ └────────────┘  │
-└─────────────────────────────────────────────────────┘
-```
+### ADR-001: Monorepo with Independent Packages
 
-**Responsibilities:**
-- Structured logging
-- Metrics collection
-- Configuration management
-- Cross-cutting concerns
+Each package is independently publishable. Users install only what they need. Internal dependencies use `workspace:*` protocol resolved at publish time.
 
-## Design Decisions
+### ADR-002: Provider Instance Injection
 
-### 1. Event-Driven Architecture
-**Decision:** Use event-driven architecture for loose coupling between rotation and consumer systems.
+Rather than having core create providers from config (which would couple core to all provider packages), providers are instantiated by the user and passed to `RotationManager` via `providerInstance`. An optional provider registry in `types` enables dynamic creation for convenience without coupling.
 
-**Rationale:**
-- Enables asynchronous processing
-- Allows consumers to react to key changes independently
-- Supports multiple consumers with different processing needs
-- Improves system resilience
+### ADR-003: Types Package as Foundation
 
-**Implementation:**
-```typescript
-export interface RotationEvent {
-  type: 'key_rotated' | 'key_revoked' | 'rotation_failed';
-  secretName: string;
-  timestamp: Date;
-  correlationId: string;
-  payload: {
-    oldVersion?: string;
-    newVersion?: string;
-    error?: string;
-  };
-}
-```
+All shared types, interfaces, and error classes live in `packages/types`. This package has zero runtime dependencies. Every other package depends on it. This prevents type duplication and ensures consistency.
 
-### 2. Provider Factory Pattern
-**Decision:** Use factory pattern to create provider instances.
+### ADR-004: Dual Verification Strategies
 
-**Rationale:**
-- Centralizes provider creation logic
-- Enables easy addition of new providers
-- Supports provider-specific configuration
-- Simplifies testing with mock providers
+Propagation verification is the hardest part of zero-downtime rotation. Two complementary strategies:
+- **Polling** (`PollingPropagationVerifier`): polls the provider directly — simple, works without consumer cooperation.
+- **Active** (`ActivePropagationVerifier`): HTTP checks against registered consumers — more thorough, requires consumer cooperation.
 
-**Implementation:**
-```typescript
-export class ProviderFactory {
-  static create(config: ProviderConfig): SecretProvider {
-    switch (config.type) {
-      case 'aws':
-        return new AWSProvider(config);
-      case 'gcp':
-        return new GCPProvider(config);
-      case 'vault':
-        return new VaultProvider(config);
-      default:
-        throw new Error(`Unknown provider type: ${config.type}`);
-    }
-  }
-}
-```
+### ADR-005: Overlapping Key Windows
 
-### 3. Overlapping Key Windows
-**Decision:** Maintain overlapping validity windows for old and new keys.
+The `KeyWindowManager` ensures old and new keys coexist during `overlapPeriodMs` (default 5 minutes). Old keys enter a grace period after activation before revocation. This prevents outages when some consumers are slower to pick up the new key.
 
-**Rationale:**
-- Ensures zero-downtime during rotation
-- Provides grace period for consumer adoption
-- Supports gradual rollout of new keys
-- Enables rollback if issues detected
+## Adding a New Package
 
-**Implementation:**
-```typescript
-export interface KeyWindow {
-  version: string;
-  validFrom: Date;
-  validUntil: Date;
-  status: 'active' | 'pending' | 'revoked';
-}
-```
+1. Create `packages/<name>/` with `package.json`, `tsconfig.json`, `vitest.config.ts`, `tsup.config.ts`, `src/index.ts`
+2. Add `@reaatech/secret-rotation-types` as a dependency
+3. Add to `tsconfig.typecheck.json` path mappings
+4. Run `pnpm install` from the package directory
+5. Add `workspace:*` dependency to any consuming packages
 
-## Architecture Decision Records (ADR)
+## Adding a New Provider
 
-### ADR-001: TypeScript Strict Mode
-**Status:** Accepted
+1. Create `packages/provider-<name>/`
+2. Implement the `SecretProvider` interface from `@reaatech/secret-rotation-types`
+3. Optionally call `registerProvider('name', ProviderClass)` in your index.ts barrel
+4. Add the provider's SDK as a direct dependency
 
-**Context:** Need to ensure type safety and catch errors early.
+## Scaling Considerations
 
-**Decision:** Use TypeScript strict mode for all code.
-
-**Consequences:**
-- More verbose code with explicit types
-- Better IDE support and autocomplete
-- Fewer runtime errors
-- Easier refactoring
-
-### ADR-002: ESM with CommonJS Fallback
-**Status:** Accepted
-
-**Context:** Need to support both ESM and CommonJS consumers.
-
-**Decision:** Build as ESM with CommonJS fallback.
-
-**Consequences:**
-- Dual build output
-- Slightly larger package size
-- Maximum compatibility
-- Future-proof for ESM adoption
-
-### ADR-003: Vitest for Testing
-**Status:** Accepted
-
-**Context:** Need a fast, modern testing framework.
-
-**Decision:** Use Vitest as the primary testing framework.
-
-**Consequences:**
-- Fast test execution
-- Native ESM support
-- Jest compatibility
-- Built-in coverage reporting
-
-## Performance Considerations
-
-### 1. Caching Strategy
-- Cache provider responses to reduce API calls
-- Use in-memory cache for frequently accessed data
-- Implement cache invalidation on rotation events
-- Consider distributed caching for multi-instance deployments
-
-### 2. Database Optimization
-- Use connection pooling
-- Implement proper indexing
-- Consider read replicas for read-heavy workloads
-- Use pagination for large result sets
-
-### 3. Network Optimization
-- Use connection reuse for external APIs
-- Implement request batching where appropriate
-- Use compression for large payloads
-- Consider CDN for static assets
-
-## Scalability Patterns
-
-### 1. Horizontal Scaling
-- Stateless service design
-- Shared storage for state
-- Load balancing across instances
-- Auto-scaling based on metrics
-
-### 2. Vertical Scaling
-- Optimize memory usage
-- Use efficient data structures
-- Profile and optimize hot paths
-- Consider garbage collection impact
-
-### 3. Data Partitioning
-- Partition by secret ID for parallel processing
-- Use consistent hashing for distribution
-- Consider geographic partitioning for latency
-- Implement cross-partition consistency when needed
-
----
-
-**Related Skills**: [Code Generation](../code-generation/SKILL.md), [Security](../security/SKILL.md), [DevOps](../devops/SKILL.md)
+- **Horizontal scaling:** Each `RotationManager` instance is independent. Use a distributed key store or shared event bus for multi-process deployments.
+- **Consumer grouping:** `ConsumerRegistry` supports consumer groups for staged rollouts.
+- **Rate limiting:** Per-secret token buckets prevent rotation flooding. Default: 5 requests per 60 seconds.

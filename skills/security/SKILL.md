@@ -1,161 +1,82 @@
-# Security Skills
+# Security Skill
 
-This skill set focuses on security-focused development for the Secret Rotation Kit project.
+Guidance for security-focused development in secret-rotation-kit.
 
-## Capabilities
+## Security Principles
 
-### 1. Secure Coding Practices
-- Implement input validation and sanitization
-- Use parameterized queries to prevent injection attacks
-- Implement proper error handling without information leakage
-- Follow principle of least privilege
+1. **Never hardcode secrets** — Use environment variables, secret managers, or injected configuration.
+2. **Validate all inputs** — Every public API in `core` validates inputs via `InputValidator`.
+3. **Least privilege** — Provider SDKs should use IAM roles with minimal permissions.
+4. **Audit logging** — Every rotation step is emitted as an event and persisted via `EventStore`.
+5. **Encryption at rest** — `FileSystemKeyStore` encrypts key material with AES-256-GCM.
 
-### 2. Cryptography
-- Use industry-standard encryption algorithms (AES-256-GCM)
-- Implement proper key derivation functions (PBKDF2, Argon2)
-- Use secure random number generation
-- Implement proper key storage and handling
+## Cryptographic Implementation
 
-### 3. Access Control
-- Implement RBAC (Role-Based Access Control)
-- Use API keys and tokens securely
-- Implement proper authentication mechanisms
-- Enforce authorization checks at all layers
+### Key Generation (`CryptographicKeyGenerator`)
 
-### 4. Audit and Logging
-- Log all security-relevant events
-- Implement tamper-evident audit trails
-- Use structured logging with correlation IDs
-- Ensure logs don't contain sensitive information
+- Uses `crypto.randomBytes` for key material.
+- Supports `base64`, `hex`, `pem`, `raw` output formats.
+- **Buffer zeroing:** Raw buffers are filled with `0` after formatting.
+- AES-256-GCM encryption/decryption with 12-byte IVs per NIST SP 800-38D.
 
-### 5. Secret Management
-- Never hardcode secrets in source code
-- Use environment variables or secret management services
-- Implement secret masking in logs and error messages
-- Rotate encryption keys regularly
+### Key Storage (`FileSystemKeyStore`)
 
-## Security Checklist
+- One JSON file per secret in the configured `baseDir`.
+- Atomic writes: write to temp file → `fs.rename`.
+- File permissions: `0o600` (owner read/write only).
+- Optional AES-256-GCM encryption of file contents.
 
-### Code Review Security Checklist
-- [ ] All inputs are validated and sanitized
-- [ ] No sensitive data in logs or error messages
-- [ ] Proper error handling without information leakage
-- [ ] Authentication and authorization checks in place
-- [ ] Encryption used for sensitive data at rest and in transit
-- [ ] No hardcoded credentials or API keys
-- [ ] Dependencies are up-to-date and vulnerability-free
-- [ ] Rate limiting implemented for external APIs
+### Rate Limiting (`RateLimiter`)
 
-### Deployment Security Checklist
-- [ ] TLS/SSL configured for all endpoints
-- [ ] Firewall rules properly configured
-- [ ] Secrets stored in secure vault
-- [ ] Monitoring and alerting configured
-- [ ] Backup and recovery procedures tested
-- [ ] Incident response plan documented
+- Per-secret token-bucket algorithm.
+- Default: 5 requests per 60-second window.
+- Stale buckets auto-cleaned after 10 minutes of inactivity.
+- Cleanup timer is `unref()`'d — won't keep process alive.
 
-## Threat Modeling
+## Input Validation (`InputValidator`)
 
-### Assets to Protect
-1. **Secret Keys**: The actual secret values being rotated
-2. **Encryption Keys**: Keys used to encrypt secrets at rest
-3. **Configuration**: Provider credentials and settings
-4. **Audit Logs**: Records of all rotation activities
-5. **Consumer Data**: Information about consuming services
+- **Secret names:** Must match `^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$`. Rejects empty strings, leading hyphens, and names over 128 characters.
+- **Metadata:** Max 50 keys, max depth 5. Rejects circular references.
+- **Intervals:** Must be positive integers in valid ranges.
+- **Coverage ratios:** Must be in range [0, 1].
+- Returns `ValidationResult` with `valid: boolean` and `errors: string[]`.
 
-### Potential Threats
-1. **Unauthorized Access**: Attackers gaining access to secrets
-2. **Man-in-the-Middle**: Interception of secrets in transit
-3. **Insider Threats**: Malicious actors with legitimate access
-4. **Supply Chain**: Compromised dependencies or build process
-5. **Denial of Service**: Attacks preventing rotation operations
+## Configuration Safety (`ConfigService`)
 
-### Mitigation Strategies
-- **Defense in Depth**: Multiple layers of security controls
-- **Zero Trust**: Never trust, always verify
-- **Least Privilege**: Minimal permissions for all operations
-- **Segmentation**: Isolate components and limit blast radius
-- **Monitoring**: Continuous monitoring and alerting
+- Deep-merges user config with comprehensive defaults.
+- **Prototype pollution protection:** Rejects keys `__proto__`, `constructor`, `prototype` during merge.
+- Returns fully resolved config with no undefined values for expected fields.
 
-## Security Testing
+## Provider Security
 
-### Static Analysis
-- Use ESLint with security plugins
-- Run Snyk or similar for dependency scanning
-- Use CodeQL for automated security analysis
-- Perform regular code reviews with security focus
+### AWS
+- Uses `@aws-sdk/client-secrets-manager`. Credentials via default AWS credential chain (env vars, IAM roles, etc.).
+- Version stage management via `AWSCURRENT`/`AWSPENDING`/`AWSPREVIOUS`.
 
-### Dynamic Testing
-- Penetration testing of APIs and endpoints
-- Fuzz testing for input validation
-- Load testing to identify DoS vulnerabilities
-- Runtime application self-protection (RASP)
+### GCP
+- Uses `@google-cloud/secret-manager`. Credentials via Application Default Credentials.
+- Rotation state tracked via secret labels.
 
-### Compliance
-- Follow OWASP Top 10 guidelines
-- Comply with SOC 2 requirements
-- Follow NIST cybersecurity framework
-- Implement GDPR data protection principles
+### Vault
+- Supports token and AppRole authentication.
+- `node-vault` loaded via `createRequire(import.meta.url)` for ESM compatibility.
+- Token should be scoped to the specific KV mount path.
 
-## Example Security Patterns
+## Code Review Checklist
 
-```typescript
-// Secure secret handling
-class SecureSecretManager {
-  private readonly encryptionKey: Buffer;
-  
-  constructor(encryptionKey: string) {
-    // Copy key into a mutable Buffer, then clear the source string
-    // Note: In production, accept a Buffer directly to avoid string interning
-    this.encryptionKey = Buffer.from(encryptionKey, 'base64');
-    // Overwrite the string's underlying memory reference where possible.
-    // (Best practice: pass keys as Buffers and zero them immediately after copying.)
-    encryptionKey = '';
-  }
-  
-  encrypt(plaintext: string): string {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-gcm', this.encryptionKey, iv);
-    
-    let ciphertext = cipher.update(plaintext, 'utf8', 'base64');
-    ciphertext += cipher.final('base64');
-    
-    const authTag = cipher.getAuthTag();
-    
-    // Return IV + ciphertext + auth tag
-    return `${iv.toString('base64')}:${ciphertext}:${authTag.toString('base64')}`;
-  }
-  
-  dispose(): void {
-    // Zero out the key material when this instance is no longer needed
-    this.encryptionKey.fill(0);
-  }
-}
+Before merging security-sensitive changes:
 
-// Input validation
-function validateSecretId(secretId: string): void {
-  const pattern = /^[a-zA-Z0-9-_]{1,256}$/;
-  if (!pattern.test(secretId)) {
-    throw new ValidationError('Invalid secret ID format');
-  }
-}
-```
+- [ ] No secrets or credentials committed to the repository.
+- [ ] All user-supplied input is validated through `InputValidator` or equivalent.
+- [ ] Key material buffers are zeroed after use.
+- [ ] File system operations use atomic writes with restricted permissions.
+- [ ] Rate limiting is applied to all public rotation entry points.
+- [ ] Error messages do not leak sensitive data (key material, internal paths, etc.).
+- [ ] Prototype pollution protections are not bypassed.
+- [ ] Provider authentication uses the principle of least privilege.
 
-## Incident Response
+## Known Limitations
 
-### Security Incident Categories
-1. **Data Breach**: Unauthorized access to secrets
-2. **Service Compromise**: Compromised rotation service
-3. **Credential Leak**: Exposed provider credentials
-4. **Denial of Service**: Rotation service unavailable
-
-### Response Procedures
-- **Containment**: Isolate affected systems
-- **Investigation**: Determine scope and impact
-- **Remediation**: Fix vulnerabilities and restore service
-- **Communication**: Notify stakeholders and customers
-- **Post-Mortem**: Document lessons learned
-
----
-
-**Related Skills**: [Code Generation](../code-generation/SKILL.md), [DevOps](../devops/SKILL.md), [Testing](../testing/SKILL.md)
+- **String immutability:** Formatted key material is held as JavaScript strings, which cannot be zeroed. Avoid holding references longer than necessary.
+- **In-memory store:** `InMemoryKeyStore` is not encrypted — keys exist in plaintext in the process heap. Use `FileSystemKeyStore` with encryption for production.
+- **SSE streaming:** The sidecar's `/events` endpoint sends rotation events without per-event authentication. Do not include sensitive data in event payloads.
