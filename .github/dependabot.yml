@@ -1,5 +1,4 @@
 version: 2
-
 updates:
   - package-ecosystem: "npm"
     directory: "/"
@@ -8,27 +7,32 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "America/Chicago"
-    versioning-strategy: "increase"
-    open-pull-requests-limit: 10
+    versioning-strategy: increase
     allow:
-      - dependency-type: "all"
-    groups:
-      dev-dependencies:
-        dependency-type: "development"
+      - dependency-type: "direct"
         update-types:
-          - "minor"
+          - "major"
           - "patch"
-      production-dependencies:
+    groups:
+      production-deps:
         dependency-type: "production"
         update-types:
-          - "minor"
+          - "major"
+          - "patch"
+      development-deps:
+        dependency-type: "development"
+        update-types:
+          - "major"
           - "patch"
     labels:
       - "dependencies"
+      - "dependabot"
     commit-message:
-      prefix: "deps"
-      prefix-development: "deps(dev)"
+      prefix: "chore(deps)"
+      prefix-development: "chore(dev-deps)"
       include: "scope"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -39,6 +43,8 @@ updates:
       timezone: "America/Chicago"
     labels:
       - "dependencies"
-      - "ci"
+      - "github-actions"
+      - "dependabot"
     commit-message:
-      prefix: "ci(deps)"
+      prefix: "ci(actions)"
+      include: "scope"
