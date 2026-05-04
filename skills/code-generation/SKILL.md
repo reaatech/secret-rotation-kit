@@ -1,77 +1,112 @@
-# Code Generation Skills
+# Code Generation Skill
 
-This skill set focuses on generating production-ready TypeScript code for the Secret Rotation Kit project.
+Guidance for writing production-ready TypeScript code in secret-rotation-kit.
 
-## Capabilities
+## Project Conventions
 
-### 1. TypeScript Implementation
-- Write type-safe code following strict TypeScript guidelines
-- Implement proper error handling with custom error classes
-- Create reusable utilities and helper functions
-- Follow established patterns from existing codebase
+### Monorepo Structure
 
-### 2. API Design
-- Design intuitive and consistent APIs
-- Implement proper input validation and sanitization
-- Create comprehensive type definitions
-- Document function signatures with JSDoc
+All code lives under `packages/<name>/src/`. Each package is independently built with tsup (CJS + ESM + DTS). Tests are co-located as `*.test.ts` next to source files.
 
-### 3. Provider Implementation
-- Implement AWS Secrets Manager provider
-- Implement GCP Secret Manager provider
-- Implement HashiCorp Vault provider
-- Create provider factory pattern
+### Import Rules
 
-### 4. Core Services
-- Implement KeyRotator service
-- Implement PropagationVerifier service
-- Implement KeyWindowManager service
-- Implement RotationScheduler service
+- Use `verbatimModuleSyntax` mode — add `type` keyword to type-only imports.
+- Cross-package imports use workspace package names:
+  - `from '@reaatech/secret-rotation-types'`
+  - `from '@reaatech/secret-rotation-observability'`
+  - `from '@reaatech/secret-rotation-core'`
+- Within-package imports use relative paths with `.js` extensions (NodeNext module resolution).
 
-### 5. Event System
-- Design event-driven architecture
-- Implement event emitters and listeners
-- Create typed event payloads
-- Handle event ordering and deduplication
+### Package Boundaries
 
-## Best Practices
+| Package | What belongs |
+|---------|-------------|
+| `types` | Type definitions, interfaces, error classes. NO runtime logic that depends on other packages. |
+| `observability` | `LoggerService` and `MetricsService` implementations. Depends only on `types`. |
+| `core` | Rotation engine, workflow, verifiers, resilience patterns, key stores, key generator, config, rate limiter, input validator. |
+| `provider-*` | Single provider implementation. Implements `SecretProvider` from `types`. Self-registers via `registerProvider()`. |
+| `sidecar` | HTTP server, SSE streaming. Depends on `core`, `types`, `observability`. |
 
-1. **Type Safety First**: Always use proper TypeScript types, avoid `any`
-2. **Error Boundaries**: Implement comprehensive error handling at all layers
-3. **Logging**: Use structured logging with correlation IDs
-4. **Testing**: Write testable code with dependency injection
-5. **Documentation**: Include inline documentation for complex logic
+## TypeScript Standards
 
-## Code Standards
+- **Strict mode** — all strict flags enabled.
+- **No `any`** — use `unknown` + narrowing instead. Test files exempt via `biome.json`.
+- **Explicit return types** on public API methods.
+- **Named exports** preferred over default exports.
+- **Interfaces for contracts** (`SecretProvider`, `KeyStore`), **type aliases** for data shapes.
 
-- Use ES modules (ESM) with CommonJS fallback
-- Follow functional programming patterns where appropriate
-- Prefer immutability and pure functions
-- Use async/await for asynchronous operations
-- Implement proper resource cleanup with finally blocks
+## Error Handling
 
-## Example Patterns
+Use the error hierarchy from `@reaatech/secret-rotation-types`:
 
 ```typescript
-// Error handling pattern
-export class RotationError extends Error {
-  constructor(
-    message: string,
-    public readonly code: string,
-    public readonly cause?: Error
-  ) {
-    super(message);
-    this.name = 'RotationError';
-  }
-}
+import { RotationError, ProviderError, TimeoutError } from '@reaatech/secret-rotation-types';
 
-// Provider interface pattern
-export interface SecretProvider {
-  rotate(secretId: string, options?: RotationOptions): Promise<RotationResult>;
-  verify(secretId: string): Promise<VerificationResult>;
+throw new ProviderError('AWS returned 500', 'aws', 'propagation', true);
+throw new TimeoutError('Verification timed out', 'verification', true);
+```
+
+- Include `stage` (which rotation phase failed).
+- Include `canRetry` (whether the operation is safe to retry).
+- `ConfigurationError` is NOT retryable.
+
+## Provider Implementation Pattern
+
+```typescript
+import type { SecretProvider, RotationSession, SecretValue, ProviderHealth } from '@reaatech/secret-rotation-types';
+import type { AWSProviderConfig } from '@reaatech/secret-rotation-types';
+
+export class AWSProvider implements SecretProvider {
+  name = 'aws-secrets-manager';
+  priority = 1;
+
+  constructor(config: AWSProviderConfig) {
+    // initialize SDK client
+  }
+
+  async getSecret(name: string): Promise<SecretValue> { /* ... */ }
+  async storeSecretValue(name: string, value: string, options?: { stage?: 'current' | 'pending' }): Promise<SecretValue> { /* ... */ }
+  // ... all SecretProvider methods
 }
 ```
 
----
+## Logging
 
-**Related Skills**: [Testing](../testing/SKILL.md), [Security](../security/SKILL.md), [Architecture](../architecture/SKILL.md)
+Use the `Logger` interface from `@reaatech/secret-rotation-types`. Never `console.log` in library code.
+
+```typescript
+import type { Logger } from '@reaatech/secret-rotation-types';
+
+class MyComponent {
+  constructor(private logger?: Logger) {}
+
+  async doWork() {
+    this.logger?.info('Starting work', { secret: 'db-password' });
+    this.logger?.error('Work failed', { error: 'reason' });
+  }
+}
+```
+
+## Testing Patterns
+
+- Use `vi.fn()` for mocking. Vitest globals are disabled — import explicitly.
+- Mock SDK clients for provider tests — no real cloud credentials.
+- Use `tmpdir()` for file-system key store tests.
+
+```typescript
+import { describe, expect, it, vi } from 'vitest';
+
+describe('AWSProvider', () => {
+  it('stores secret value', async () => {
+    const provider = new AWSProvider({ region: 'us-east-1' });
+    // mock the SDK client internally
+  });
+});
+```
+
+## Biome Linting
+
+- Run `pnpm lint` before committing.
+- Use `pnpm lint:fix` for auto-fixable issues.
+- Only add `// biome-ignore` comments when necessary. Prefer fixing the issue.
+- Test files have `noExplicitAny` disabled via `biome.json` overrides.

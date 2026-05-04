@@ -1,40 +1,45 @@
 # Dependencies
 node_modules/
 .pnpm-store/
-package-lock.json
-yarn.lock
 
 # Build outputs
 dist/
+build/
 *.tsbuildinfo
-*.tgz
 
-# Testing
-coverage/
+# Stray build artifacts inside src/ (tsup output belongs in dist/ only)
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.d.ts.map
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
 
 # Environment
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
 
 # IDE
-.idea/
 .vscode/
+.idea/
+.claude
 *.swp
 *.swo
-
-# Agent / tooling local state
-.claude/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
+# Test
+coverage/
 
-# Temporary files
-*.tmp
-*.temp
+# Turborepo
+.turbo/
+
+# Development
+DEV_PLAN.md

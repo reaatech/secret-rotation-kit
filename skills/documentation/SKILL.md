@@ -1,136 +1,64 @@
-# Documentation Skills
+# Documentation Skill
 
-This skill set focuses on technical writing and documentation for the Secret Rotation Kit project.
+Guidance for technical writing and documentation in secret-rotation-kit.
 
-## Capabilities
+## Documentation Files
 
-### 1. API Documentation
-- Write comprehensive API reference documentation
-- Document all public interfaces and types
-- Provide usage examples for each API
-- Maintain JSDoc comments in source code
+| File | Audience | Purpose |
+|------|----------|---------|
+| `README.md` | Users/contributors | Project overview, install, quick start, packages table |
+| `packages/*/README.md` | Package consumers | Per-package API reference, install, usage, related packages |
+| `ARCHITECTURE.md` | Contributors | System design, package relationships, data flows |
+| `AGENTS.md` | AI agents | Coding conventions, tooling, package conventions |
+| `CONTRIBUTING.md` | Contributors | Setup, conventions, PR process |
+| `skills/*/SKILL.md` | AI agents | Domain-specific agent guidance |
 
-### 2. User Guides
-- Create getting started guides
-- Write configuration tutorials
-- Document common use cases and patterns
-- Provide troubleshooting guides
+## Package README Format
 
-### 3. Architecture Documentation
-- Document system architecture and design decisions
-- Create sequence diagrams for complex workflows
-- Document data flow and state management
-- Maintain ADR (Architecture Decision Records)
+Every package README in `packages/*/README.md` follows this structure:
 
-### 4. Code Comments
-- Write meaningful inline comments
-- Document complex algorithms and logic
-- Explain non-obvious design decisions
-- Keep comments up-to-date with code changes
+1. **Title** — `# @reaatech/secret-rotation-<name>`
+2. **Badges** — npm version, license, CI status (matching format: `shields.io`)
+3. **Status note** — `> **Status:** Pre-1.0 — APIs may change in minor versions.`
+4. **Description** — One sentence with link to main repo
+5. **Installation** — Both `npm install` and `pnpm add` commands
+6. **Feature Overview** — Bullet list of capabilities
+7. **Quick Start** — Runnable code example
+8. **API Reference** — Tables with exports, methods, options
+9. **Usage Patterns** — Additional examples with code blocks
+10. **Related Packages** — Links to sibling npm packages
+11. **License** — Badge-style MIT link
 
-### 5. Release Documentation
-- Write release notes and changelogs
-- Document breaking changes and migration guides
-- Create upgrade guides for new versions
-- Maintain version compatibility matrix
+## Root README Format
 
-## Documentation Standards
+The root `README.md` follows this structure:
 
-### Writing Style
-- Use clear, concise language
-- Write in active voice
-- Include code examples for all concepts
-- Use consistent terminology throughout
+1. **Title** — `# secret-rotation-kit`
+2. **Badges** — CI, license, TypeScript
+3. **Description** — Blockquote tagline + paragraph
+4. **Features** — Grouped bullet list
+5. **Installation** — Individual package installs + contributing setup
+6. **Quick Start** — Runnable example using multiple packages
+7. **Packages** — Table linking to each package directory
+8. **Documentation** — Links to ARCHITECTURE.md, AGENTS.md, CONTRIBUTING.md
+9. **License** — MIT link
 
-### Formatting
-- Use Markdown for all documentation
-- Follow consistent heading hierarchy
-- Include tables for configuration options
-- Use code blocks with syntax highlighting
+## Writing Standards
 
-### Structure
-```
-docs/
-  getting-started.md
-  configuration.md
-  providers/
-    aws.md
-    gcp.md
-    vault.md
-  guides/
-    zero-downtime-rotation.md
-    propagation-verification.md
-    monitoring-and-alerting.md
-  api-reference/
-    classes/
-    interfaces/
-    types/
-  troubleshooting.md
-```
+- **Audience:** Assume the reader knows TypeScript/Node.js but is new to this library.
+- **Be precise:** Reference exact exports, method signatures, and file paths.
+- **Code examples:** Must be runnable. Include necessary imports. Use 2-space indentation.
+- **Tables:** Use Markdown tables for API references and configuration options.
+- **Spelling:** American English. No emojis in documentation.
+- **Formatting:** Single backticks for code references, triple backticks with language for blocks.
 
-## Best Practices
+## Types Package Documentation
 
-1. **Audience Awareness**: Write for the intended audience (beginners vs. experts)
-2. **Examples First**: Provide working examples before detailed explanations
-3. **Cross-Reference**: Link to related documentation
-4. **Keep Updated**: Review and update documentation with each release
-5. **Visual Aids**: Use diagrams and flowcharts for complex concepts
+The `packages/types/README.md` must be the most thorough — it documents every shared type, interface, and error class. Use tables organized by category (Core Types, Events, Verification, Config, Errors, Interfaces).
 
-## Documentation Checklist
+## What Not to Document
 
-Before marking documentation as complete:
-
-- [ ] All public APIs are documented
-- [ ] Code examples are tested and working
-- [ ] Links are valid and point to correct locations
-- [ ] Spelling and grammar are correct
-- [ ] Terminology is consistent
-- [ ] Screenshots/diagrams are clear and labeled
-- [ ] Configuration options are fully documented
-- [ ] Error messages are explained
-- [ ] Migration paths are provided for breaking changes
-
-## Example Documentation Format
-
-```markdown
-# KeyRotator
-
-The `KeyRotator` class manages the core rotation logic for secrets.
-
-## Constructor
-
-```typescript
-constructor(provider: SecretProvider, config: RotationConfig)
-```
-
-### Parameters
-
-- `provider` - The secret provider implementation
-- `config` - Configuration options for rotation
-
-### Example
-
-```typescript
-const rotator = new KeyRotator(awsProvider, {
-  overlapPeriod: 300000,
-  verificationStrategy: 'hybrid'
-});
-```
-
-## Methods
-
-### rotate(secretId)
-
-Initiates a rotation for the specified secret.
-
-**Parameters:**
-- `secretId` - The identifier of the secret to rotate
-
-**Returns:** `Promise<RotationResult>`
-
-**Throws:** `RotationError` if rotation fails
-```
-
----
-
-**Related Skills**: [Code Generation](../code-generation/SKILL.md), [Architecture](../architecture/SKILL.md)
+- Don't duplicate implementation details that live in source files.
+- Don't document private methods or internal-only exports.
+- Don't include TODOs or roadmap items in package READMEs — those belong in issues or DEV_PLAN.md.
+- Don't link to DEV_PLAN.md from READMEs (it's for internal development tracking).

@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@reaatech/secret-rotation-types": ["./packages/types/src/index.ts"],
+      "@reaatech/secret-rotation-observability": ["./packages/observability/src/index.ts"],
+      "@reaatech/secret-rotation-core": ["./packages/core/src/index.ts"],
+      "@reaatech/secret-rotation-provider-aws": ["./packages/provider-aws/src/index.ts"],
+      "@reaatech/secret-rotation-provider-gcp": ["./packages/provider-gcp/src/index.ts"],
+      "@reaatech/secret-rotation-provider-vault": ["./packages/provider-vault/src/index.ts"],
+      "@reaatech/secret-rotation-sidecar": ["./packages/sidecar/src/index.ts"]
+    }
+  }
+}
