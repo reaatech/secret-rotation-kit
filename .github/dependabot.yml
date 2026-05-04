@@ -10,20 +10,16 @@ updates:
     versioning-strategy: increase
     allow:
       - dependency-type: "direct"
-        update-types:
-          - "major"
-          - "patch"
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@biomejs/biome"
+        update-types: ["version-update:semver-major"]
     groups:
       production-deps:
         dependency-type: "production"
-        update-types:
-          - "major"
-          - "patch"
       development-deps:
         dependency-type: "development"
-        update-types:
-          - "major"
-          - "patch"
     labels:
       - "dependencies"
       - "dependabot"
@@ -41,6 +37,11 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "America/Chicago"
+    allow:
+      - dependency-type: "direct"
+        update-types:
+          - "patch"
+          - "minor"
     labels:
       - "dependencies"
       - "github-actions"
