@@ -35,7 +35,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.0.0",
+    "@aws-sdk/client-secrets-manager": "^3.1041.0",
     "@reaatech/secret-rotation-types": "workspace:*"
   },
   "devDependencies": {
