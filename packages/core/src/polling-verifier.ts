@@ -1,8 +1,8 @@
-import type { Logger } from '@reaatech/secret-rotation-types';
-import type { PropagationVerifier } from '@reaatech/secret-rotation-types';
-import type { SecretProvider } from '@reaatech/secret-rotation-types';
-import type { RotationSession } from '@reaatech/secret-rotation-types';
 import type {
+  Logger,
+  PropagationVerifier,
+  RotationSession,
+  SecretProvider,
   VerificationOptions,
   VerificationResult,
   VerificationStatus,

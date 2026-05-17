@@ -1,6 +1,11 @@
 import { randomBytes } from 'node:crypto';
-import type { KeyStore, Logger, SecretProvider } from '@reaatech/secret-rotation-types';
-import type { RotationSession, SecretKey } from '@reaatech/secret-rotation-types';
+import type {
+  KeyStore,
+  Logger,
+  RotationSession,
+  SecretKey,
+  SecretProvider,
+} from '@reaatech/secret-rotation-types';
 import { RotationError } from './errors.js';
 import { KeyLifecycleManager } from './key-lifecycle-manager.js';
 
@@ -108,7 +113,7 @@ export class RollbackManager {
 
       try {
         await this.lifecycle.markFailed(entry.secretName, entry.newKeyId, error);
-      } catch (markFailedError) {
+      } catch (_markFailedError) {
         this.logger?.warn('Rollback: mark failed skipped (non-fatal)', {
           entryId: entry.id,
         });

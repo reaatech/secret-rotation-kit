@@ -1,4 +1,4 @@
-import { type IncomingMessage, type Server, type ServerResponse, createServer } from 'node:http';
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { RotationManager, RotationResult } from '@reaatech/secret-rotation-core';
 import { validateSecretName } from '@reaatech/secret-rotation-core';
 import { MetricsService } from '@reaatech/secret-rotation-observability';

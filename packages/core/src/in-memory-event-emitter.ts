@@ -1,5 +1,9 @@
-import type { EventEmitter, EventFilters, EventHandler } from '@reaatech/secret-rotation-types';
-import type { RotationEvent } from '@reaatech/secret-rotation-types';
+import type {
+  EventEmitter,
+  EventFilters,
+  EventHandler,
+  RotationEvent,
+} from '@reaatech/secret-rotation-types';
 
 /** Default maximum number of events retained in history. */
 const DEFAULT_MAX_HISTORY = 1000;

@@ -1,7 +1,7 @@
 import type { SecretProvider } from '@reaatech/secret-rotation-types';
 import { describe, expect, it, vi } from 'vitest';
 import { InMemoryKeyStore } from './in-memory-key-store.js';
-import { RotationManager, createRotationConfig } from './rotation-manager.js';
+import { createRotationConfig, RotationManager } from './rotation-manager.js';
 
 function createMockProvider(): SecretProvider {
   let versionCounter = 0;
