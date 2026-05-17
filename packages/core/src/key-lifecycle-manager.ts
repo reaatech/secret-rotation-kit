@@ -1,6 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { KeyStore, Logger } from '@reaatech/secret-rotation-types';
-import type { RotationState, SecretKey } from '@reaatech/secret-rotation-types';
+import type { KeyStore, Logger, RotationState, SecretKey } from '@reaatech/secret-rotation-types';
 
 /** Options for creating a new key. */
 export interface CreateKeyOptions {

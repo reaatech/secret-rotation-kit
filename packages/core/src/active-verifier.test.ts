@@ -1,5 +1,4 @@
-import type { SecretProvider } from '@reaatech/secret-rotation-types';
-import type { Consumer } from '@reaatech/secret-rotation-types';
+import type { Consumer, SecretProvider } from '@reaatech/secret-rotation-types';
 import { describe, expect, it, vi } from 'vitest';
 import { ActivePropagationVerifier } from './active-verifier.js';
 import { ConsumerRegistry } from './consumer-registry.js';

@@ -1,7 +1,9 @@
-import type { Logger } from '@reaatech/secret-rotation-types';
-import type { ConsumerGroup } from '@reaatech/secret-rotation-types';
-import type { ConsumerRegistry as ConsumerRegistryInterface } from '@reaatech/secret-rotation-types';
-import type { Consumer } from '@reaatech/secret-rotation-types';
+import type {
+  Consumer,
+  ConsumerGroup,
+  ConsumerRegistry as ConsumerRegistryInterface,
+  Logger,
+} from '@reaatech/secret-rotation-types';
 
 export interface ConsumerHealthStatus {
   consumerId: string;
