@@ -428,9 +428,9 @@ describe('SidecarServer', () => {
             },
           },
           (res) => {
-            let data = '';
+            let _data = '';
             res.on('data', (c) => {
-              data += c;
+              _data += c;
             });
             res.on('end', () => {
               expect(res.statusCode).toBe(500);

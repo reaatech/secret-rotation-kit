@@ -1,1 +1,1 @@
-export { SidecarServer, type SidecarOptions } from './server.js';
+export { type SidecarOptions, SidecarServer } from './server.js';

@@ -1,7 +1,11 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { EventEmitter, EventFilters, Logger } from '@reaatech/secret-rotation-types';
-import type { RotationEvent } from '@reaatech/secret-rotation-types';
+import type {
+  EventEmitter,
+  EventFilters,
+  Logger,
+  RotationEvent,
+} from '@reaatech/secret-rotation-types';
 
 export interface EventStoreOptions {
   /** Directory for persisted events. */

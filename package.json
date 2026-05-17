@@ -17,7 +17,15 @@
     "version-packages": "changeset version",
     "release": "turbo run build && changeset publish"
   },
-  "keywords": ["secrets", "rotation", "aws", "gcp", "vault", "security", "zero-downtime"],
+  "keywords": [
+    "secrets",
+    "rotation",
+    "aws",
+    "gcp",
+    "vault",
+    "security",
+    "zero-downtime"
+  ],
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
   "license": "MIT",
   "packageManager": "pnpm@10.33.0",

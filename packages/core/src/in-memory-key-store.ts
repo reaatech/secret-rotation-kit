@@ -1,5 +1,4 @@
-import type { KeyStore } from '@reaatech/secret-rotation-types';
-import type { SecretKey } from '@reaatech/secret-rotation-types';
+import type { KeyStore, SecretKey } from '@reaatech/secret-rotation-types';
 import { PerKeyLock } from './per-key-lock.js';
 
 /**
@@ -58,7 +57,7 @@ export class InMemoryKeyStore implements KeyStore {
   async update(key: SecretKey): Promise<void> {
     await this.lock.withLock(key.secretName, () => {
       const secretStore = this.store.get(key.secretName);
-      if (!secretStore || !secretStore.has(key.keyId)) {
+      if (!secretStore?.has(key.keyId)) {
         throw new Error(`Key not found: ${key.secretName}/${key.keyId}`);
       }
       secretStore.set(key.keyId, key);

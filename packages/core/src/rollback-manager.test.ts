@@ -1,5 +1,4 @@
-import type { SecretProvider } from '@reaatech/secret-rotation-types';
-import type { SecretKey } from '@reaatech/secret-rotation-types';
+import type { SecretKey, SecretProvider } from '@reaatech/secret-rotation-types';
 import { describe, expect, it, vi } from 'vitest';
 import { InMemoryKeyStore } from './in-memory-key-store.js';
 import { RollbackManager } from './rollback-manager.js';

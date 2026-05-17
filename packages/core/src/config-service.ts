@@ -1,5 +1,4 @@
-import type { RotationConfig } from '@reaatech/secret-rotation-types';
-import type { ProviderConfig } from '@reaatech/secret-rotation-types';
+import type { ProviderConfig, RotationConfig } from '@reaatech/secret-rotation-types';
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
