@@ -171,6 +171,9 @@ importers:
 
   packages/types:
     devDependencies:
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.9.1
       tsup:
         specifier: ^8.4.0
         version: 8.5.1(postcss@8.5.10)(typescript@6.0.3)
