@@ -1,6 +1,10 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import type { KeyGenerationOptions, KeyGenerator } from '@reaatech/secret-rotation-types';
-import type { KeyFormat, SecretKey } from '@reaatech/secret-rotation-types';
+import type {
+  KeyFormat,
+  KeyGenerationOptions,
+  KeyGenerator,
+  SecretKey,
+} from '@reaatech/secret-rotation-types';
 
 /** Default key length in bits. */
 const DEFAULT_KEY_LENGTH_BITS = 256;

@@ -5,16 +5,14 @@ import type {
   KeyStore,
   Logger,
   PropagationVerifier,
-  SecretProvider,
-} from '@reaatech/secret-rotation-types';
-import type {
   RotationEvent,
   RotationFailedEvent,
   RotationSession,
   RotationStage,
   SecretKey,
+  SecretProvider,
+  VerificationOptions,
 } from '@reaatech/secret-rotation-types';
-import type { VerificationOptions } from '@reaatech/secret-rotation-types';
 import { ProviderError, RotationError } from './errors.js';
 import { KeyLifecycleManager } from './key-lifecycle-manager.js';
 import type { RollbackManager } from './rollback-manager.js';

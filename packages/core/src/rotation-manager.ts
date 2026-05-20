@@ -3,9 +3,9 @@ import type {
   KeyStore,
   Logger,
   PropagationVerifier,
+  RotationState,
   SecretProvider,
 } from '@reaatech/secret-rotation-types';
-import type { RotationState } from '@reaatech/secret-rotation-types';
 import { CryptographicKeyGenerator } from './crypto-key-generator.js';
 import { RotationError } from './errors.js';
 import { InMemoryEventEmitter } from './in-memory-event-emitter.js';

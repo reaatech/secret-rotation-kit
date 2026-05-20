@@ -4,10 +4,10 @@ import type {
   KeyStore,
   Logger,
   PropagationVerifier,
+  SecretKey,
   SecretProvider,
+  VerificationResult,
 } from '@reaatech/secret-rotation-types';
-import type { SecretKey } from '@reaatech/secret-rotation-types';
-import type { VerificationResult } from '@reaatech/secret-rotation-types';
 import { describe, expect, it, vi } from 'vitest';
 import { ProviderError, RotationError } from './errors.js';
 import { RotationWorkflow } from './rotation-workflow.js';

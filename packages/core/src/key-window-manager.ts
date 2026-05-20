@@ -1,5 +1,4 @@
-import type { KeyStore, Logger } from '@reaatech/secret-rotation-types';
-import type { SecretKey } from '@reaatech/secret-rotation-types';
+import type { KeyStore, Logger, SecretKey } from '@reaatech/secret-rotation-types';
 
 export interface KeyWindowConfig {
   /** How long new and old keys overlap (ms). */

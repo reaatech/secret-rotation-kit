@@ -1,11 +1,13 @@
-import type { Logger, PropagationVerifier, SecretProvider } from '@reaatech/secret-rotation-types';
-import type { RotationSession } from '@reaatech/secret-rotation-types';
 import type {
   Consumer,
   ConsumerAuthConfig,
   ConsumerVerificationFailure,
   ConsumerVerificationResult,
+  Logger,
+  PropagationVerifier,
   RetryPolicy,
+  RotationSession,
+  SecretProvider,
   VerificationOptions,
   VerificationResult,
   VerificationStatus,

@@ -1,5 +1,4 @@
-import type { SecretProvider } from '@reaatech/secret-rotation-types';
-import type { RotationSession } from '@reaatech/secret-rotation-types';
+import type { RotationSession, SecretProvider } from '@reaatech/secret-rotation-types';
 import { describe, expect, it, vi } from 'vitest';
 import { TimeoutError } from './errors.js';
 import { PollingPropagationVerifier } from './polling-verifier.js';
