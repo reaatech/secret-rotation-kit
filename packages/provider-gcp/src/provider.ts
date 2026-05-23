@@ -1,8 +1,9 @@
 import { randomBytes } from 'node:crypto';
-import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
+import { createRequire } from 'node:module';
 import type {
   DeleteOptions,
   GCPProviderConfig,
+  GCPProviderOptions,
   ProviderCapabilities,
   ProviderHealth,
   RotationSession,
@@ -11,11 +12,19 @@ import type {
   SecretVersion,
 } from '@reaatech/secret-rotation-types';
 
+// Type-only imports are erased at build time, so they create no runtime
+// dependency on the optional `@google-cloud/secret-manager` peer.
+type GcpSdk = typeof import('@google-cloud/secret-manager');
+type SecretManagerServiceClient = InstanceType<GcpSdk['SecretManagerServiceClient']>;
+
 /**
  * GCP Secret Manager provider adapter.
  *
  * GCP doesn't have native rotation stages, so we use labels to track
  * rotation state (`rotation-status`, `pending-version`).
+ *
+ * `@google-cloud/secret-manager` is an optional peer dependency; it is loaded
+ * lazily so this package can be installed without pulling in the GCP SDK.
  */
 export class GCPProvider implements SecretProvider {
   name = 'gcp-secret-manager';
@@ -24,10 +33,33 @@ export class GCPProvider implements SecretProvider {
   private client: SecretManagerServiceClient;
   private projectId: string;
 
-  constructor(config: GCPProviderConfig) {
-    this.client = new SecretManagerServiceClient(
-      config.endpoint ? { apiEndpoint: config.endpoint } : undefined,
-    );
+  /**
+   * Static factory that accepts a pre-built `SecretManagerServiceClient`. Use
+   * this when you already have a configured client (e.g. in tests) or want to
+   * control credential resolution yourself.
+   */
+  static create(config: GCPProviderConfig, client: SecretManagerServiceClient): GCPProvider {
+    return new GCPProvider(config, client);
+  }
+
+  constructor(config: GCPProviderOptions, client?: SecretManagerServiceClient) {
+    if (client) {
+      this.client = client;
+    } else {
+      let sdk: GcpSdk;
+      try {
+        const requireFromHere = createRequire(import.meta.url);
+        sdk = requireFromHere('@google-cloud/secret-manager') as GcpSdk;
+      } catch (cause) {
+        throw new Error(
+          'Optional peer dependency "@google-cloud/secret-manager" is not installed. Install it with:\n  npm install @google-cloud/secret-manager',
+          { cause },
+        );
+      }
+      this.client = new sdk.SecretManagerServiceClient(
+        config.endpoint ? { apiEndpoint: config.endpoint } : undefined,
+      );
+    }
     this.projectId = config.projectId;
   }
 

@@ -60,5 +60,4 @@ The `packages/types/README.md` must be the most thorough — it documents every 
 
 - Don't duplicate implementation details that live in source files.
 - Don't document private methods or internal-only exports.
-- Don't include TODOs or roadmap items in package READMEs — those belong in issues or DEV_PLAN.md.
-- Don't link to DEV_PLAN.md from READMEs (it's for internal development tracking).
+- Don't include TODOs or roadmap items in package READMEs — those belong in the issue tracker.

@@ -1,30 +1,31 @@
 import { describe, expect, it, vi } from 'vitest';
 import { GCPProvider } from './provider.js';
 
-// Mock GCP SDK
-vi.mock('@google-cloud/secret-manager', async () => {
+// The GCP provider only calls client methods, so we inject a stub client whose
+// methods are mocked per test rather than loading the real SDK.
+function createMockClient(): Record<string, ReturnType<typeof vi.fn>> {
   return {
-    SecretManagerServiceClient: vi.fn().mockImplementation(() => ({
-      createSecret: vi.fn(),
-      getSecret: vi.fn(),
-      addSecretVersion: vi.fn(),
-      accessSecretVersion: vi.fn(),
-      deleteSecret: vi.fn(),
-      listSecretVersions: vi.fn(),
-      updateSecret: vi.fn(),
-      destroySecretVersion: vi.fn(),
-      listSecrets: vi.fn(),
-    })),
+    createSecret: vi.fn(),
+    getSecret: vi.fn(),
+    addSecretVersion: vi.fn(),
+    accessSecretVersion: vi.fn(),
+    deleteSecret: vi.fn(),
+    listSecretVersions: vi.fn(),
+    updateSecret: vi.fn(),
+    destroySecretVersion: vi.fn(),
+    listSecrets: vi.fn(),
   };
-});
+}
 
 function createProvider(): {
   provider: GCPProvider;
   client: Record<string, ReturnType<typeof vi.fn>>;
 } {
-  const provider = new GCPProvider({ type: 'gcp', projectId: 'test-project' });
-  const client = (provider as unknown as { client: Record<string, ReturnType<typeof vi.fn>> })
-    .client;
+  const client = createMockClient();
+  const provider = new GCPProvider(
+    { type: 'gcp', projectId: 'test-project' },
+    client as unknown as Parameters<typeof GCPProvider.create>[1],
+  );
   return { provider, client };
 }
 

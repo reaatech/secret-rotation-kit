@@ -14,7 +14,10 @@ packages/
   provider-aws/       — AWS Secrets Manager adapter
   provider-gcp/       — GCP Secret Manager adapter
   provider-vault/     — HashiCorp Vault KV v2 adapter
-  sidecar/            — HTTP sidecar server with REST API and SSE streaming
+  provider-vercel/    — Vercel project environment variable adapter (fetch-based, no SDK)
+  sidecar/            — HTTP sidecar server with REST API and SSE streaming, plus the
+                        `secret-rotation-sidecar` CLI binary
+examples/             — Runnable examples (private workspace package, not published)
 ```
 
 ## Build System

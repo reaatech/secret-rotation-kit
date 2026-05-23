@@ -77,33 +77,54 @@ export interface ProviderCapabilities {
 /** Base configuration for all providers. */
 export interface ProviderConfig {
   /** Provider type discriminator. */
-  type: 'aws' | 'gcp' | 'vault';
+  type: 'aws' | 'gcp' | 'vault' | 'vercel';
 
   /** Provider-specific configuration fields. */
   [key: string]: unknown;
 }
 
-/** AWS-specific provider configuration. */
-export interface AWSProviderConfig extends ProviderConfig {
-  type: 'aws';
+// The `*Options` interfaces below are what each provider's constructor accepts.
+// They are identical to the matching `*Config` except the `type` discriminator
+// is optional: it is only meaningful to the provider factory (`createProvider`),
+// which uses it to pick a class. When you construct a provider directly you have
+// already chosen the class, so `type` is redundant.
+
+/** Options for constructing {@link AWSProvider} directly. */
+export interface AWSProviderOptions {
+  /** Provider discriminator. Only required when using `createProvider`. */
+  type?: 'aws';
   /** AWS region. */
   region: string;
   /** Optional custom endpoint (e.g., for LocalStack). */
   endpoint?: string;
+  [key: string]: unknown;
 }
 
-/** GCP-specific provider configuration. */
-export interface GCPProviderConfig extends ProviderConfig {
-  type: 'gcp';
+/** AWS-specific provider configuration (factory form, `type` required). */
+export interface AWSProviderConfig extends AWSProviderOptions, ProviderConfig {
+  type: 'aws';
+}
+
+/** Options for constructing {@link GCPProvider} directly. */
+export interface GCPProviderOptions {
+  /** Provider discriminator. Only required when using `createProvider`. */
+  type?: 'gcp';
   /** GCP project ID. */
   projectId: string;
   /** Optional custom endpoint. */
   endpoint?: string;
+  [key: string]: unknown;
 }
 
-/** Vault-specific provider configuration. */
-export interface VaultProviderConfig extends ProviderConfig {
-  type: 'vault';
+/** GCP-specific provider configuration (factory form, `type` required). */
+export interface GCPProviderConfig extends GCPProviderOptions, ProviderConfig {
+  type: 'gcp';
+}
+
+/** Options for constructing {@link VaultProvider} directly. */
+export interface VaultProviderOptions {
+  /** Provider discriminator. Only required when using `createProvider`. */
+  type?: 'vault';
   /** Vault server URL. */
   url: string;
   /** KV engine mount path. */
@@ -114,4 +135,41 @@ export interface VaultProviderConfig extends ProviderConfig {
   roleId?: string;
   /** Secret ID for AppRole authentication. */
   secretId?: string;
+  [key: string]: unknown;
+}
+
+/** Vault-specific provider configuration (factory form, `type` required). */
+export interface VaultProviderConfig extends VaultProviderOptions, ProviderConfig {
+  type: 'vault';
+}
+
+/** Vercel deployment targets an environment variable can apply to. */
+export type VercelEnvTarget = 'production' | 'preview' | 'development';
+
+/** Options for constructing {@link VercelProvider} directly. */
+export interface VercelProviderOptions {
+  /** Provider discriminator. Only required when using `createProvider`. */
+  type?: 'vercel';
+  /** Vercel API bearer token (https://vercel.com/account/tokens). */
+  token: string;
+  /** Project id or name that owns the environment variables. */
+  projectId: string;
+  /** Team id, required when the project belongs to a team. */
+  teamId?: string;
+  /** Deployment targets to write to (defaults to `['production']`). */
+  target?: VercelEnvTarget[];
+  /**
+   * Env var type. Defaults to `encrypted` so values can be read back for
+   * propagation verification. `sensitive` is write-only and cannot be verified
+   * by read-back (use a custom/active verifier in that case).
+   */
+  envType?: 'encrypted' | 'sensitive';
+  /** API base URL (defaults to `https://api.vercel.com`). */
+  apiBaseUrl?: string;
+  [key: string]: unknown;
+}
+
+/** Vercel-specific provider configuration (factory form, `type` required). */
+export interface VercelProviderConfig extends VercelProviderOptions, ProviderConfig {
+  type: 'vercel';
 }

@@ -52,8 +52,17 @@ jobs:
           title: 'chore(release): version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Token-based publish with build provenance. Requires an NPM_TOKEN
+          # secret (an npm automation token with publish access).
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
+          # UPGRADE PATH — after the first successful publish, you can switch to
+          # OIDC trusted publishing (no long-lived token): on npmjs.com add a
+          # Trusted Publisher for each @reaatech/* package pointing at
+          # `reaatech/secret-rotation-kit` + this workflow, then remove the
+          # NPM_TOKEN line above (`id-token: write` is already granted, and
+          # pnpm >= 10.12 performs the OIDC exchange automatically).
+          # https://docs.npmjs.com/trusted-publishers
 
       - name: Mirror published packages to GitHub Packages
         if: steps.changesets.outputs.published == 'true'

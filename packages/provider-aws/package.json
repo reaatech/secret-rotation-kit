@@ -4,9 +4,12 @@
   "description": "AWS Secrets Manager provider for Secret Rotation Kit",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
+  "engines": {
+    "node": ">=20"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/reaatech/secret-rotation-kit.git",
+    "url": "git+https://github.com/reaatech/secret-rotation-kit.git",
     "directory": "packages/provider-aws"
   },
   "homepage": "https://github.com/reaatech/secret-rotation-kit/tree/main/packages/provider-aws#readme",
@@ -14,6 +17,10 @@
     "url": "https://github.com/reaatech/secret-rotation-kit/issues"
   },
   "type": "module",
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/index.cjs"
+  ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -37,10 +44,18 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.1049.0",
     "@reaatech/secret-rotation-types": "workspace:*"
   },
+  "peerDependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.1049.0"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-secrets-manager": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.1049.0",
     "@types/node": "^25.8.0",
     "tsup": "^8.4.0",
     "typescript": "^6.0.3",

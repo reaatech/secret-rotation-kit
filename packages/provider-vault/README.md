@@ -16,6 +16,10 @@ npm install @reaatech/secret-rotation-provider-vault node-vault
 pnpm add @reaatech/secret-rotation-provider-vault node-vault
 ```
 
+> `node-vault` is an **optional peer dependency**, loaded lazily at runtime.
+> Install it alongside this package; if it's missing the adapter throws a clear
+> error telling you to install it.
+
 ## Feature Overview
 
 - **Full `SecretProvider` implementation** — CRUD, versioning, rotation sessions, and health checks
