@@ -46,6 +46,42 @@ await server.start();
 console.log(`Sidecar running at ${server.address}`);
 ```
 
+## Standalone CLI
+
+The package ships a `secret-rotation-sidecar` binary that boots a fully wired
+server from environment variables — no code required. Install the provider
+package you need (an optional peer dependency) alongside the sidecar:
+
+```bash
+npm install @reaatech/secret-rotation-sidecar @reaatech/secret-rotation-provider-aws @aws-sdk/client-secrets-manager
+
+SRK_PROVIDER=aws SRK_AWS_REGION=us-east-1 npx secret-rotation-sidecar
+```
+
+This is also the default entry point of the published Docker image
+(`CMD ["node", "packages/sidecar/dist/bin.js"]`).
+
+### Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SRK_PROVIDER` | (required) | Provider to load: `aws`, `gcp`, `vault`, or `vercel` |
+| `PORT` / `SRK_PORT` | `8080` | HTTP port |
+| `SRK_HOST` | `0.0.0.0` | Bind address |
+| `SRK_AUTH_TOKEN` | — | Bearer token for write endpoints |
+| `SRK_CORS_ORIGIN` | `http://localhost:*` | Allowed CORS origin |
+| `SRK_LOG_LEVEL` | `info` | `debug` \| `info` \| `warn` \| `error` |
+| `SRK_LOG_STRUCTURED` | `true` | Emit JSON logs (`false` for human-readable) |
+| `SRK_ROTATION_INTERVAL_MS` | — | Enable scheduled rotation at this interval |
+| `SRK_SECRETS` | — | Comma-separated secrets to auto-rotate (needs the interval) |
+| `SRK_AWS_REGION` / `SRK_AWS_ENDPOINT` | — | AWS provider config |
+| `SRK_GCP_PROJECT_ID` / `SRK_GCP_ENDPOINT` | — | GCP provider config |
+| `SRK_VAULT_URL` / `SRK_VAULT_MOUNT` / `SRK_VAULT_TOKEN` | — | Vault provider config |
+| `SRK_VERCEL_TOKEN` / `SRK_VERCEL_PROJECT_ID` / `SRK_VERCEL_TEAM_ID` / `SRK_VERCEL_TARGET` | — | Vercel provider config (`SRK_VERCEL_TARGET` is comma-separated) |
+
+The process handles `SIGTERM`/`SIGINT` for graceful shutdown (stops scheduled
+rotation, then closes the server and SSE connections).
+
 ## API Reference
 
 ### `SidecarServer`

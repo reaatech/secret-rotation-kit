@@ -34,18 +34,26 @@ pnpm add @reaatech/secret-rotation-types
 # Logging and metrics
 pnpm add @reaatech/secret-rotation-observability
 
-# AWS Secrets Manager adapter
-pnpm add @reaatech/secret-rotation-provider-aws
+# AWS Secrets Manager adapter (+ its SDK)
+pnpm add @reaatech/secret-rotation-provider-aws @aws-sdk/client-secrets-manager
 
-# GCP Secret Manager adapter
-pnpm add @reaatech/secret-rotation-provider-gcp
+# GCP Secret Manager adapter (+ its SDK)
+pnpm add @reaatech/secret-rotation-provider-gcp @google-cloud/secret-manager
 
-# HashiCorp Vault adapter
-pnpm add @reaatech/secret-rotation-provider-vault
+# HashiCorp Vault adapter (+ its client)
+pnpm add @reaatech/secret-rotation-provider-vault node-vault
+
+# Vercel environment variables adapter (no SDK needed)
+pnpm add @reaatech/secret-rotation-provider-vercel
 
 # HTTP sidecar server
 pnpm add @reaatech/secret-rotation-sidecar
 ```
+
+> Each provider's cloud SDK (`@aws-sdk/client-secrets-manager`,
+> `@google-cloud/secret-manager`, `node-vault`) is an **optional peer
+> dependency** — install only the one(s) you use. The adapter loads it lazily
+> and throws a clear error if it's missing.
 
 ### Contributing
 
@@ -97,6 +105,31 @@ console.log(`Rotated in ${result.duration}ms`);
 await manager.start(['database-password', 'api-key']);
 ```
 
+## Run as a sidecar
+
+The sidecar package ships a `secret-rotation-sidecar` binary that boots a fully
+wired HTTP server from environment variables — no code required:
+
+```bash
+npm install @reaatech/secret-rotation-sidecar @reaatech/secret-rotation-provider-aws @aws-sdk/client-secrets-manager
+
+SRK_PROVIDER=aws SRK_AWS_REGION=us-east-1 npx secret-rotation-sidecar
+```
+
+This is also the default entry point of the published Docker image. See the
+[sidecar README](./packages/sidecar/README.md#standalone-cli) for the full list
+of `SRK_*` environment variables.
+
+## Examples
+
+Runnable examples live in [`examples/`](./examples). Start with the offline
+in-memory rotation, which implements the `SecretProvider` interface from scratch:
+
+```bash
+pnpm install && pnpm build
+pnpm --filter @reaatech/secret-rotation-examples start:in-memory
+```
+
 ## Packages
 
 | Package | Description |
@@ -107,6 +140,7 @@ await manager.start(['database-password', 'api-key']);
 | [`@reaatech/secret-rotation-provider-aws`](./packages/provider-aws) | AWS Secrets Manager adapter |
 | [`@reaatech/secret-rotation-provider-gcp`](./packages/provider-gcp) | GCP Secret Manager adapter |
 | [`@reaatech/secret-rotation-provider-vault`](./packages/provider-vault) | HashiCorp Vault KV v2 adapter |
+| [`@reaatech/secret-rotation-provider-vercel`](./packages/provider-vercel) | Vercel project environment variable adapter (no SDK) |
 | [`@reaatech/secret-rotation-sidecar`](./packages/sidecar) | HTTP sidecar server with REST API and SSE streaming |
 
 ## Documentation

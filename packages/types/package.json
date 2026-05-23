@@ -4,9 +4,12 @@
   "description": "Type definitions and abstract interfaces for Secret Rotation Kit",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
+  "engines": {
+    "node": ">=20"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/reaatech/secret-rotation-kit.git",
+    "url": "git+https://github.com/reaatech/secret-rotation-kit.git",
     "directory": "packages/types"
   },
   "homepage": "https://github.com/reaatech/secret-rotation-kit/tree/main/packages/types#readme",
@@ -14,6 +17,7 @@
     "url": "https://github.com/reaatech/secret-rotation-kit/issues"
   },
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

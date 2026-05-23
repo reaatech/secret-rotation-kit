@@ -10,6 +10,7 @@
       "@reaatech/secret-rotation-provider-aws": ["./packages/provider-aws/src/index.ts"],
       "@reaatech/secret-rotation-provider-gcp": ["./packages/provider-gcp/src/index.ts"],
       "@reaatech/secret-rotation-provider-vault": ["./packages/provider-vault/src/index.ts"],
+      "@reaatech/secret-rotation-provider-vercel": ["./packages/provider-vercel/src/index.ts"],
       "@reaatech/secret-rotation-sidecar": ["./packages/sidecar/src/index.ts"]
     }
   }

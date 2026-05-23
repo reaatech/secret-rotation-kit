@@ -37,6 +37,24 @@ importers:
         specifier: ^3.1.1
         version: 3.2.4(@types/node@25.9.1)
 
+  examples:
+    dependencies:
+      '@reaatech/secret-rotation-core':
+        specifier: workspace:*
+        version: link:../packages/core
+      '@reaatech/secret-rotation-observability':
+        specifier: workspace:*
+        version: link:../packages/observability
+      '@reaatech/secret-rotation-provider-aws':
+        specifier: workspace:*
+        version: link:../packages/provider-aws
+      '@reaatech/secret-rotation-sidecar':
+        specifier: workspace:*
+        version: link:../packages/sidecar
+      '@reaatech/secret-rotation-types':
+        specifier: workspace:*
+        version: link:../packages/types
+
   packages/core:
     dependencies:
       '@reaatech/secret-rotation-observability':
@@ -80,13 +98,13 @@ importers:
 
   packages/provider-aws:
     dependencies:
-      '@aws-sdk/client-secrets-manager':
-        specifier: ^3.1049.0
-        version: 3.1051.0
       '@reaatech/secret-rotation-types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
+      '@aws-sdk/client-secrets-manager':
+        specifier: ^3.1049.0
+        version: 3.1051.0
       '@types/node':
         specifier: ^25.8.0
         version: 25.9.1
@@ -102,13 +120,13 @@ importers:
 
   packages/provider-gcp:
     dependencies:
-      '@google-cloud/secret-manager':
-        specifier: ^5.0.0
-        version: 5.6.0
       '@reaatech/secret-rotation-types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
+      '@google-cloud/secret-manager':
+        specifier: ^5.0.0
+        version: 5.6.0
       '@types/node':
         specifier: ^25.8.0
         version: 25.9.1
@@ -144,6 +162,25 @@ importers:
         specifier: ^3.1.1
         version: 3.2.4(@types/node@25.9.1)
 
+  packages/provider-vercel:
+    dependencies:
+      '@reaatech/secret-rotation-types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@types/node':
+        specifier: ^25.8.0
+        version: 25.9.1
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(postcss@8.5.10)(typescript@6.0.3)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^3.1.1
+        version: 3.2.4(@types/node@25.9.1)
+
   packages/sidecar:
     dependencies:
       '@reaatech/secret-rotation-core':
@@ -156,6 +193,18 @@ importers:
         specifier: workspace:*
         version: link:../types
     devDependencies:
+      '@reaatech/secret-rotation-provider-aws':
+        specifier: workspace:*
+        version: link:../provider-aws
+      '@reaatech/secret-rotation-provider-gcp':
+        specifier: workspace:*
+        version: link:../provider-gcp
+      '@reaatech/secret-rotation-provider-vault':
+        specifier: workspace:*
+        version: link:../provider-vault
+      '@reaatech/secret-rotation-provider-vercel':
+        specifier: workspace:*
+        version: link:../provider-vercel
       '@types/node':
         specifier: ^25.8.0
         version: 25.9.1

@@ -4,9 +4,12 @@
   "description": "HashiCorp Vault provider for Secret Rotation Kit",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
+  "engines": {
+    "node": ">=20"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/reaatech/secret-rotation-kit.git",
+    "url": "git+https://github.com/reaatech/secret-rotation-kit.git",
     "directory": "packages/provider-vault"
   },
   "homepage": "https://github.com/reaatech/secret-rotation-kit/tree/main/packages/provider-vault#readme",
@@ -14,6 +17,10 @@
     "url": "https://github.com/reaatech/secret-rotation-kit/issues"
   },
   "type": "module",
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/index.cjs"
+  ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

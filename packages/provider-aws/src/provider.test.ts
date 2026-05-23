@@ -1,20 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
 import { AWSProvider } from './provider.js';
 
-// Mock AWS SDK
-vi.mock('@aws-sdk/client-secrets-manager', async () => {
-  const actual = await vi.importActual('@aws-sdk/client-secrets-manager');
-  return {
-    ...actual,
-    SecretsManagerClient: vi.fn().mockImplementation(() => ({
-      send: vi.fn(),
-    })),
-  };
-});
+// The AWS SDK command classes (which build the `.input` payloads asserted below)
+// are loaded for real; only the network-bound client is replaced with a stub
+// whose `send` is mocked per test.
+type MockClient = { send: ReturnType<typeof vi.fn> };
 
-function createProvider(): { provider: AWSProvider; client: { send: ReturnType<typeof vi.fn> } } {
-  const provider = new AWSProvider({ type: 'aws', region: 'us-east-1' });
-  const client = (provider as unknown as { client: { send: ReturnType<typeof vi.fn> } }).client;
+function createProvider(): { provider: AWSProvider; client: MockClient } {
+  const client: MockClient = { send: vi.fn() };
+  const provider = new AWSProvider(
+    { type: 'aws', region: 'us-east-1' },
+    client as unknown as Parameters<typeof AWSProvider.create>[1],
+  );
   return { provider, client };
 }
 

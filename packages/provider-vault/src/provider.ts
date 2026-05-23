@@ -10,6 +10,7 @@ import type {
   SecretValue,
   SecretVersion,
   VaultProviderConfig,
+  VaultProviderOptions,
 } from '@reaatech/secret-rotation-types';
 
 // node-vault has loose types, so we define a minimal client interface
@@ -66,7 +67,7 @@ export class VaultProvider implements SecretProvider {
     return new VaultProvider(config, client);
   }
 
-  constructor(config: VaultProviderConfig, client?: VaultClient) {
+  constructor(config: VaultProviderOptions, client?: VaultClient) {
     if (client) {
       this.client = client;
     } else {

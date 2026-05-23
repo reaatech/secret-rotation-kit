@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    # Weekly security audit (Mondays 06:00 UTC) so new advisories surface even
+    # without a push.
+    - cron: '0 6 * * 1'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -67,8 +71,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Non-blocking: a newly disclosed advisory in a transitive dep should not
+      # fail unrelated PRs. The weekly scheduled run surfaces issues; review the
+      # job logs and remediate deliberately.
       - name: Audit dependencies
         run: pnpm audit --audit-level high
+        continue-on-error: true
 
   # ─────────────────────────────────────────────
   # Code Format Check
@@ -100,7 +108,7 @@ jobs:
           key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Check formatting
-        run: pnpm biome format --write . && git diff --exit-code
+        run: pnpm biome format .
 
   # ─────────────────────────────────────────────
   # Lint

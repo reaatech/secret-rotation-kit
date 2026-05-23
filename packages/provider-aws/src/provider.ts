@@ -1,15 +1,8 @@
 import { randomBytes } from 'node:crypto';
-import {
-  CreateSecretCommand,
-  DeleteSecretCommand,
-  GetSecretValueCommand,
-  ListSecretVersionIdsCommand,
-  PutSecretValueCommand,
-  SecretsManagerClient,
-  UpdateSecretVersionStageCommand,
-} from '@aws-sdk/client-secrets-manager';
+import { createRequire } from 'node:module';
 import type {
   AWSProviderConfig,
+  AWSProviderOptions,
   DeleteOptions,
   ProviderCapabilities,
   ProviderHealth,
@@ -19,26 +12,57 @@ import type {
   SecretVersion,
 } from '@reaatech/secret-rotation-types';
 
+// Type-only imports are erased at build time, so they create no runtime
+// dependency on the optional `@aws-sdk/client-secrets-manager` peer.
+type AwsSdk = typeof import('@aws-sdk/client-secrets-manager');
+type SecretsManagerClient = InstanceType<AwsSdk['SecretsManagerClient']>;
+
 /**
  * AWS Secrets Manager provider adapter.
  *
  * Uses version stages (AWSCURRENT, AWSPENDING, AWSPREVIOUS) for rotation support.
+ *
+ * `@aws-sdk/client-secrets-manager` is an optional peer dependency; it is loaded
+ * lazily so this package can be installed without pulling in the AWS SDK.
  */
 export class AWSProvider implements SecretProvider {
   name = 'aws-secrets-manager';
   priority = 1;
 
+  private readonly sdk: AwsSdk;
   private client: SecretsManagerClient;
 
-  constructor(config: AWSProviderConfig) {
-    this.client = new SecretsManagerClient({
-      region: config.region,
-      ...(config.endpoint && { endpoint: config.endpoint }),
-    });
+  /**
+   * Static factory that accepts a pre-built `SecretsManagerClient`. Use this
+   * when you already have a configured client (e.g. in tests) or want to
+   * control credential/region resolution yourself.
+   */
+  static create(config: AWSProviderConfig, client: SecretsManagerClient): AWSProvider {
+    return new AWSProvider(config, client);
+  }
+
+  constructor(config: AWSProviderOptions, client?: SecretsManagerClient) {
+    let sdk: AwsSdk;
+    try {
+      const requireFromHere = createRequire(import.meta.url);
+      sdk = requireFromHere('@aws-sdk/client-secrets-manager') as AwsSdk;
+    } catch (cause) {
+      throw new Error(
+        'Optional peer dependency "@aws-sdk/client-secrets-manager" is not installed. Install it with:\n  npm install @aws-sdk/client-secrets-manager',
+        { cause },
+      );
+    }
+    this.sdk = sdk;
+    this.client =
+      client ??
+      new sdk.SecretsManagerClient({
+        region: config.region,
+        ...(config.endpoint && { endpoint: config.endpoint }),
+      });
   }
 
   async createSecret(name: string, value: string): Promise<void> {
-    const command = new CreateSecretCommand({
+    const command = new this.sdk.CreateSecretCommand({
       Name: name,
       SecretString: value,
       Description: 'Managed by secret-rotation-kit',
@@ -47,7 +71,7 @@ export class AWSProvider implements SecretProvider {
   }
 
   async getSecret(name: string, version?: string): Promise<SecretValue> {
-    const command = new GetSecretValueCommand({
+    const command = new this.sdk.GetSecretValueCommand({
       SecretId: name,
       ...(version ? { VersionId: version } : { VersionStage: 'AWSCURRENT' }),
     });
@@ -66,7 +90,7 @@ export class AWSProvider implements SecretProvider {
     value: string,
     options?: { stage?: 'current' | 'pending' },
   ): Promise<SecretValue> {
-    const command = new PutSecretValueCommand({
+    const command = new this.sdk.PutSecretValueCommand({
       SecretId: name,
       SecretString: value,
       ...(options?.stage === 'pending' && { VersionStages: ['AWSPENDING'] }),
@@ -82,7 +106,7 @@ export class AWSProvider implements SecretProvider {
   }
 
   async deleteSecret(name: string, options?: DeleteOptions): Promise<void> {
-    const command = new DeleteSecretCommand({
+    const command = new this.sdk.DeleteSecretCommand({
       SecretId: name,
       ForceDeleteWithoutRecovery: options?.permanent ?? false,
     });
@@ -94,7 +118,7 @@ export class AWSProvider implements SecretProvider {
     let nextToken: string | undefined;
 
     do {
-      const command = new ListSecretVersionIdsCommand({
+      const command = new this.sdk.ListSecretVersionIdsCommand({
         SecretId: name,
         IncludeDeprecated: true,
         ...(nextToken && { NextToken: nextToken }),
@@ -131,7 +155,7 @@ export class AWSProvider implements SecretProvider {
     }
 
     for (const stage of version.stages ?? []) {
-      const command = new UpdateSecretVersionStageCommand({
+      const command = new this.sdk.UpdateSecretVersionStageCommand({
         SecretId: name,
         VersionStage: stage,
         RemoveFromVersionId: versionId,
@@ -161,7 +185,7 @@ export class AWSProvider implements SecretProvider {
       throw new Error('Cannot complete rotation: session has no versionId');
     }
     // Promote the pending version to AWSCURRENT.
-    const command = new UpdateSecretVersionStageCommand({
+    const command = new this.sdk.UpdateSecretVersionStageCommand({
       SecretId: session.secretName,
       VersionStage: 'AWSCURRENT',
       MoveToVersionId: session.state.versionId,
@@ -175,7 +199,7 @@ export class AWSProvider implements SecretProvider {
       return;
     }
     // Remove AWSPENDING stage from the version so it is no longer reachable.
-    const command = new UpdateSecretVersionStageCommand({
+    const command = new this.sdk.UpdateSecretVersionStageCommand({
       SecretId: session.secretName,
       VersionStage: 'AWSPENDING',
       RemoveFromVersionId: session.state.versionId,
@@ -186,7 +210,7 @@ export class AWSProvider implements SecretProvider {
   async health(): Promise<ProviderHealth> {
     const start = Date.now();
     try {
-      const command = new ListSecretVersionIdsCommand({
+      const command = new this.sdk.ListSecretVersionIdsCommand({
         SecretId: '__health-check__',
         MaxResults: 1,
       });

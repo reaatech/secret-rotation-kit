@@ -1,7 +1,7 @@
 {
-  "name": "@reaatech/secret-rotation-core",
+  "name": "@reaatech/secret-rotation-provider-vercel",
   "version": "0.1.0",
-  "description": "Core rotation engine for zero-downtime secret rotation",
+  "description": "Vercel project environment variable provider for Secret Rotation Kit",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
   "engines": {
@@ -10,14 +10,17 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/reaatech/secret-rotation-kit.git",
-    "directory": "packages/core"
+    "directory": "packages/provider-vercel"
   },
-  "homepage": "https://github.com/reaatech/secret-rotation-kit/tree/main/packages/core#readme",
+  "homepage": "https://github.com/reaatech/secret-rotation-kit/tree/main/packages/provider-vercel#readme",
   "bugs": {
     "url": "https://github.com/reaatech/secret-rotation-kit/issues"
   },
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/index.cjs"
+  ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -41,7 +44,6 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@reaatech/secret-rotation-observability": "workspace:*",
     "@reaatech/secret-rotation-types": "workspace:*"
   },
   "devDependencies": {

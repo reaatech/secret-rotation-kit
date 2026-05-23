@@ -1,0 +1,19 @@
+{
+  "name": "@reaatech/secret-rotation-examples",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Runnable examples for Secret Rotation Kit",
+  "type": "module",
+  "scripts": {
+    "start:in-memory": "node in-memory-provider-rotation.mjs",
+    "start:sidecar": "node sidecar-server.mjs",
+    "start:aws": "node aws-rotation.mjs"
+  },
+  "dependencies": {
+    "@reaatech/secret-rotation-core": "workspace:*",
+    "@reaatech/secret-rotation-observability": "workspace:*",
+    "@reaatech/secret-rotation-provider-aws": "workspace:*",
+    "@reaatech/secret-rotation-sidecar": "workspace:*",
+    "@reaatech/secret-rotation-types": "workspace:*"
+  }
+}

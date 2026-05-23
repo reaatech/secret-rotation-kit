@@ -16,6 +16,10 @@ npm install @reaatech/secret-rotation-provider-aws @aws-sdk/client-secrets-manag
 pnpm add @reaatech/secret-rotation-provider-aws @aws-sdk/client-secrets-manager
 ```
 
+> `@aws-sdk/client-secrets-manager` is an **optional peer dependency**, loaded
+> lazily at runtime. Install it alongside this package; if it's missing the
+> adapter throws a clear error telling you to install it.
+
 ## Feature Overview
 
 - **Full `SecretProvider` implementation** — CRUD, versioning, rotation sessions, and health checks

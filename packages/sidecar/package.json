@@ -4,9 +4,12 @@
   "description": "HTTP sidecar server for Secret Rotation Kit",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
+  "engines": {
+    "node": ">=20"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/reaatech/secret-rotation-kit.git",
+    "url": "git+https://github.com/reaatech/secret-rotation-kit.git",
     "directory": "packages/sidecar"
   },
   "homepage": "https://github.com/reaatech/secret-rotation-kit/tree/main/packages/sidecar#readme",
@@ -14,6 +17,7 @@
     "url": "https://github.com/reaatech/secret-rotation-kit/issues"
   },
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -23,6 +27,9 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     }
+  },
+  "bin": {
+    "secret-rotation-sidecar": "./dist/bin.js"
   },
   "files": [
     "dist"
@@ -41,7 +48,31 @@
     "@reaatech/secret-rotation-observability": "workspace:*",
     "@reaatech/secret-rotation-types": "workspace:*"
   },
+  "peerDependencies": {
+    "@reaatech/secret-rotation-provider-aws": "workspace:^",
+    "@reaatech/secret-rotation-provider-gcp": "workspace:^",
+    "@reaatech/secret-rotation-provider-vault": "workspace:^",
+    "@reaatech/secret-rotation-provider-vercel": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@reaatech/secret-rotation-provider-aws": {
+      "optional": true
+    },
+    "@reaatech/secret-rotation-provider-gcp": {
+      "optional": true
+    },
+    "@reaatech/secret-rotation-provider-vault": {
+      "optional": true
+    },
+    "@reaatech/secret-rotation-provider-vercel": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@reaatech/secret-rotation-provider-aws": "workspace:*",
+    "@reaatech/secret-rotation-provider-gcp": "workspace:*",
+    "@reaatech/secret-rotation-provider-vault": "workspace:*",
+    "@reaatech/secret-rotation-provider-vercel": "workspace:*",
     "@types/node": "^25.8.0",
     "tsup": "^8.4.0",
     "typescript": "^6.0.3",
