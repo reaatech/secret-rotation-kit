@@ -19,37 +19,6 @@ env:
 
 jobs:
   # ─────────────────────────────────────────────
-  # Setup & Install
-  # ─────────────────────────────────────────────
-  install:
-    name: Install Dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Save pnpm store
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.local/share/pnpm/store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-
-  # ─────────────────────────────────────────────
   # Security Audit
   # ─────────────────────────────────────────────
   audit:
@@ -84,7 +53,6 @@ jobs:
   format:
     name: Code Format
     runs-on: ubuntu-latest
-    needs: install
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -98,14 +66,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Restore dependencies
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.local/share/pnpm/store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Check formatting
         run: pnpm biome format .
@@ -116,7 +78,6 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    needs: install
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -130,14 +91,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Restore dependencies
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.local/share/pnpm/store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
         run: pnpm lint
@@ -148,7 +103,6 @@ jobs:
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
-    needs: install
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -162,14 +116,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Restore dependencies
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.local/share/pnpm/store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Type check
         run: pnpm typecheck
@@ -194,17 +142,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Restore dependencies
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.local/share/pnpm/store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Re-link workspace packages
-        run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Build packages
         run: pnpm build
@@ -241,17 +180,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
 
-      - name: Restore dependencies
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.local/share/pnpm/store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Re-link workspace packages
-        run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Download build artifacts
         uses: actions/download-artifact@v8
@@ -281,17 +211,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Restore dependencies
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.local/share/pnpm/store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Re-link workspace packages
-        run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Download build artifacts
         uses: actions/download-artifact@v8
