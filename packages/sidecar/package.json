@@ -1,6 +1,6 @@
 {
   "name": "@reaatech/secret-rotation-sidecar",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "HTTP sidecar server for Secret Rotation Kit",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",

@@ -1,6 +1,6 @@
 {
   "name": "@reaatech/secret-rotation-provider-gcp",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "GCP Secret Manager provider for Secret Rotation Kit",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
