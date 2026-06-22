@@ -47,7 +47,7 @@
     "@reaatech/secret-rotation-types": "workspace:*"
   },
   "peerDependencies": {
-    "@google-cloud/secret-manager": "^6.1.3"
+    "@google-cloud/secret-manager": "^6.2.0"
   },
   "peerDependenciesMeta": {
     "@google-cloud/secret-manager": {
@@ -55,7 +55,7 @@
     }
   },
   "devDependencies": {
-    "@google-cloud/secret-manager": "^6.1.3",
+    "@google-cloud/secret-manager": "^6.2.0",
     "@types/node": "^25.9.3",
     "tsup": "^8.4.0",
     "typescript": "^6.0.3",
