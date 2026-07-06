@@ -44,7 +44,7 @@
     "@reaatech/secret-rotation-types": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^26.0.1",
+    "@types/node": "^26.1.0",
     "tsup": "^8.4.0",
     "typescript": "^6.0.3",
     "vitest": "^3.1.1"
