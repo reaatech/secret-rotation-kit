@@ -47,7 +47,7 @@
     "@reaatech/secret-rotation-types": "workspace:*"
   },
   "peerDependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.1110.0"
+    "@aws-sdk/client-secrets-manager": "^3.1120.0"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-secrets-manager": {
@@ -55,8 +55,8 @@
     }
   },
   "devDependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.1110.0",
-    "@types/node": "^26.2.0",
+    "@aws-sdk/client-secrets-manager": "^3.1120.0",
+    "@types/node": "^26.4.0",
     "tsup": "^8.4.0",
     "typescript": "^6.0.3",
     "vitest": "^3.1.1"
